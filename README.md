@@ -4,7 +4,7 @@
 
 This project utilizes the Lexical Analyzer I previously created to syntactically analyze a given Pascal source code file. 
 The way it does this is by following the grammar for a subset of the Pascal language and ensuring the tokens are appearing in a syntactically correct manner. 
-For example, if a VAR declaration appears, it must follow the following grammar rule: `VAR IDENT COLON TYPE SEMICOLON`
+For example, if a `VAR` declaration appears, it must follow the following grammar rule: `VAR IDENT COLON TYPE SEMICOLON`
 or else the expected tokens will be printed onto the console. 
 
 The syntax analyzer features:
