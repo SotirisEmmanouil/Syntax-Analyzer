@@ -24,9 +24,7 @@ And more.
 ## How it works:
 
 
-The program reads the given Pascal source code file, lexically analyzes it by assigning each lexeme an appropriate token, and adding all the Token: Lexeme 
-pairs into an ArrayList. Once this is done, the Syntax analyzer will begin to traverse the ArrayList and ensure the order of the tokens appear in a syntactically appropriate manner, 
-which maintains grammar rules. Roughly each token has its own “accept method” which will either “accept” the token or print the expected token, 
-according to what statement or operation is occurring. 
+The program reads the given Pascal source code file, lexically analyzes it by assigning each lexeme an appropriate token, and adds all the Token:Lexeme 
+pairs into an ArrayList. Once this is done, the Syntax analyzer will begin to traverse the ArrayList and ensure the order of the tokens appear in a syntactically appropriate manner,which maintains grammar rules. Roughly each token has its own “accept method” which will either “accept” the token or print the expected token, according to what statement or operation is occurring. 
 
 This project allowed me to learn more about the second stage of compilation in programming languages. 
