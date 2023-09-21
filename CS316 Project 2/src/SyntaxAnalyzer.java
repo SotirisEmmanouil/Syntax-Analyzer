@@ -186,7 +186,7 @@ public class SyntaxAnalyzer {
             		  result.add(new Token(Type.RPAREN,lexeme));           	              	    
                   } 
                
-               else if(lexeme.endsWith(":")) {
+               else if(lexeme.endsWith(":") && lexeme.matches("^[A-I].*$")) {
               		   result.add(new Token(Type.IDENT, lexeme.substring(0,lexeme.length()-1)));
               		   result.add(new Token(Type.COLON, lexeme.substring(lexeme.length()-1)));
               	
