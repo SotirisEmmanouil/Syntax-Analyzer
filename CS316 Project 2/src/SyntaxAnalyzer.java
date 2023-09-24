@@ -54,256 +54,183 @@ public class SyntaxAnalyzer {
 	static List<Token> tokens = null;
 	String tokenString = String.format("%-20s", tokens.get(i));
 	
-	public static class Token {
-       
-    	private Type t;
-        private String c; 
-
-        public Token(Type t, String c) {		//creating a token using OOP
-            this.t = t;
-            this.c = c;
-        }
-        
-        public String toString() {			//toString method so tokens can be printed
-            return t.toString();
-        }
     
-        public String getLexeme() {			//get the lexeme attached to the token
-        	return c;
-        }
-       
-    }
-
-       public static List<Token> lexicallyAnalyze(String input) {
-       
-       List<Token> result = new ArrayList<Token>();
-        
+ public static List<Token> lexicallyAnalyze(String input) {
+        List<Token> result = new ArrayList<Token>();
         String[] lexemes = input.split("\\s+"); // Split input into tokens using whitespace as separator
-        
-        for (String lexeme : lexemes) {
-           
-         
-               if(lexeme.startsWith("(")){
-            	   char secondLetter = lexeme.charAt(1);
-            	  
-            	   if(Character.isLetter(secondLetter) && lexeme.endsWith(";") && lexeme.contains(")")) {		
-            		 int index = lexeme.indexOf(')'), index2 = lexeme.indexOf(';');
-            		 result.add(new Token(Type.LPAREN, lexeme.substring(0,1)));
-            		 result.add(new Token(Type.IDENT, lexeme.substring(1,index)));
-            		 result.add(new Token(Type.RPAREN, lexeme.substring(index,index2)));
-            		 result.add(new Token(Type.SEMICOLON, lexeme.substring(index2)));
-            	   }
-            	   else if (Character.isLetter(secondLetter)) {
-              		 result.add(new Token(Type.LPAREN, lexeme.substring(0,1)));
-              		 result.add(new Token(Type.IDENT, lexeme.substring(1)));
-              	   }
-            	   else if(lexeme.charAt(1) == '*') {
-                    result.add(new Token(Type.BEGCOMMENT, lexeme));
-            	   }
-            	   
-            	   else if(lexeme.charAt(1) == '“') {
-            		   result.add(new Token(Type.LPAREN, lexeme.substring(0,1)));
-                       result.add(new Token(Type.QUOTE, lexeme.substring(1,2)));
-                       
-                       if(lexeme.substring(1).matches("^[A-I].*$")){
-                    	 result.add(new Token(Type.QUOTE, lexeme));
-                    	 
-                    	 int index = lexeme.indexOf('“'), index2 = lexeme.indexOf(')');
-                    	 
-                    	 result.add(new Token(Type.IDENT, lexeme.substring(1,index)));
-                    	 result.add(new Token(Type.QUOTE, lexeme.substring(index,index2)));
-                    	 result.add(new Token(Type.RPAREN, lexeme.substring(index2)));
-                    	 
-                       }
-               	   }
-                	else 
-                         result.add(new Token(Type.LPAREN, lexeme));
-                }
-               else if(lexeme.endsWith("');") && lexeme.matches("^[A-I].*$")){
-        	    	int i = lexeme.indexOf(")"), j = lexeme.indexOf(";"), k = lexeme.indexOf("'");
-       	    	  result.add(new Token(Type.IDENT, lexeme.substring(0,k)));
-       	    	  result.add(new Token(Type.SINQUO, lexeme.substring(k,i)));
-       	    	  result.add(new Token(Type.RPAREN, lexeme.substring(i,j)));
-       	    	  result.add(new Token(Type.SEMICOLON, lexeme.substring(j)));
-              }
-               
-               else if(lexeme.endsWith(";")) {
-            	  
-                 if(lexeme.substring(0,lexeme.length()-1).matches("-?\\d+")) {		//using regex check if its a number before the semicolon
-            		   result.add(new Token(Type.NUMLIT, lexeme.substring(0,lexeme.length()-1)));
-            		   result.add(new Token(Type.SEMICOLON, lexeme.substring(lexeme.length()-1)));
-                 }
-                 else if(lexeme.contains("INTEGER") || lexeme.contains("integer")) {
-        			   result.add(new Token(Type.INTEGER, lexeme.substring(0,lexeme.length()-1)));
-           		       result.add(new Token(Type.SEMICOLON, lexeme.substring(lexeme.length()-1)));
-        		  }
-                 
-                 else if(lexeme.substring(0,lexeme.length()-1).matches("^[A-I].*$")) {		//using regex check if the string 
-          		       result.add(new Token(Type.IDENT, lexeme.substring(0,lexeme.length()-1)));
-          		       result.add(new Token(Type.SEMICOLON, lexeme.substring(lexeme.length()-1)));
-                 }
-                                 
-          		  else if(lexeme.startsWith("'")) {
-          			 result.add(new Token(Type.SINQUO, lexeme.substring(0,1)));
-          			 result.add(new Token(Type.RPAREN, lexeme.substring(1,2)));
-          			 result.add(new Token(Type.SEMICOLON, lexeme.substring(2,3)));
-                 }
-                 
-          		  else if(lexeme.startsWith("Read(")) {
-                 	   result.add(new Token(Type.READ, lexeme.substring(0,4)));
-                 	   result.add(new Token(Type.LPAREN, lexeme.substring(4,5)));
-                 	 
-                 	   if(lexeme.substring(5).matches("^[A-I].*$") && lexeme.substring(5).endsWith(");")) {			//if it contains an IDENT
-                 		                   	
-                 	     int index = lexeme.indexOf(')'), index2 = lexeme.indexOf(";");
-                 		 result.add(new Token(Type.IDENT, lexeme.substring(5,index)));
-                 		 result.add(new Token(Type.LPAREN, lexeme.substring(index,index2)));
-                 		 result.add(new Token(Type.SEMICOLON, lexeme.substring(index2)));
-                 		   
-                 	   }
-                 	     else {
-                 			   result.add(new Token(Type.UNKNOWN, lexeme.substring(5)));
-                 			   
-                 		   }
-                 	  }  
-          		
-               }
-              else if(lexeme.endsWith(")")) {
-            	  int index = lexeme.indexOf(')');
-            	  
-            	  if(lexeme.startsWith("*")) {
-            		  result.add(new Token(Type.ENDCOMMENT, lexeme));
-            	  }
-            	  else if(lexeme.substring(0,lexeme.length()-1).matches("-?\\d+")) {
-            		  result.add(new Token(Type.NUMLIT, lexeme.substring(0,lexeme.length()-1)));
-             		   result.add(new Token(Type.RPAREN, lexeme.substring(lexeme.length()-1)));
-            	  }
-            	  else if (lexeme.length() >= 2 && Character.isLetter(lexeme.charAt(lexeme.length() - 2))) {
-            		    result.add(new Token(Type.IDENT, lexeme.substring(0, lexeme.length() - 1)));
-            		    result.add(new Token(Type.RPAREN, lexeme.substring(lexeme.length() - 1)));
-            		}
-            	  else 
-            		  result.add(new Token(Type.RPAREN,lexeme));           	              	    
-                  } 
-               
-               else if(lexeme.endsWith(":") && lexeme.matches("^[A-I].*$")) {
-              		   result.add(new Token(Type.IDENT, lexeme.substring(0,lexeme.length()-1)));
-              		   result.add(new Token(Type.COLON, lexeme.substring(lexeme.length()-1)));
-              	
-                 }
-               
-               else if(lexeme.startsWith("Write('")) {
-            	   result.add(new Token(Type.WRITE, lexeme.substring(0,5)));
-            	   result.add(new Token(Type.LPAREN, lexeme.substring(5,6)));
-            	   result.add(new Token(Type.SINQUO, lexeme.substring(6,7)));
-                   
-            	   if(lexeme.substring(7).length() > 0) {
-            	  
-            		 if(lexeme.substring(7).matches("^[A-I].*$")) {
-            			 
-            		    if(lexeme.substring(7).endsWith("');")){
-                	    	int i = lexeme.indexOf(")"), j = lexeme.indexOf(";"), k = lexeme.indexOf("'");
-                	    	  result.add(new Token(Type.IDENT, lexeme.substring(7,k)));
-                	    	  result.add(new Token(Type.SINQUO, lexeme.substring(k,i)));
-                	    	  result.add(new Token(Type.RPAREN, lexeme.substring(i,j)));
-                	    	  result.add(new Token(Type.SEMICOLON, lexeme.substring(j)));
-            			  }
-            		    else
-            	          result.add(new Token(Type.IDENT, lexeme.substring(7)));
-            		   }
-            	     
-                    else if(lexeme.substring(7).matches("-?\\d+")) {
-                    	  
-                    	if(lexeme.substring(7).endsWith("');")){
-                  	    	int i = lexeme.indexOf(")"), j = lexeme.indexOf(";"), k = lexeme.indexOf("'");
-                  	    	  result.add(new Token(Type.IDENT, lexeme.substring(7,k)));
-                  	    	  result.add(new Token(Type.SINQUO, lexeme.substring(k,i)));
-                  	    	  result.add(new Token(Type.RPAREN, lexeme.substring(i,j)));
-                  	    	  result.add(new Token(Type.SEMICOLON, lexeme.substring(j)));
-              			  }
-                    	
-            	       result.add(new Token(Type.IDENT, lexeme.substring(7)));
+        	
+        for (String lexeme : lexemes) {			//traverse array
+            String currentToken = "";				
+            boolean insideString = false;
+
+            for (int i = 0; i < lexeme.length(); i++) {		//traverse each character of the string
+                char currentChar = lexeme.charAt(i);
+
+                if (currentChar == '(' || currentChar == '*' || currentChar == '>' || currentChar == '<'
+                    || currentChar == ';' || currentChar == ')' || currentChar == '\''  || currentChar == ':' ) {
+                    if (!insideString) {//if its one of these 
+                        // Add the current token to the result if it's not empty
+                        if (!currentToken.isEmpty()) {
+                            result.add(new Token(assign(currentToken), currentToken));
+                            currentToken = "";
+                        }
+
+                        // Check for multi-character tokens
+                        if (i < lexeme.length() - 1) {		//if the the next char is one of these
+                            String nextTwoChars = lexeme.substring(i, i + 2);
+                            if (nextTwoChars.equals("(*") || nextTwoChars.equals("*)")		
+                                    || nextTwoChars.equals(">=")  || nextTwoChars.equals(":=")|| nextTwoChars.equals("<=")) {
+                                // Add multi-character token and increment the index
+                                result.add(new Token(assign(nextTwoChars), nextTwoChars));  //add the two chars to the list 
+                                i++;
+                                continue;
+                            }
+                        }
+
+                        // Add the current character as a separate token
+                        result.add(new Token(assign(String.valueOf(currentChar)), String.valueOf(currentChar)));
+                    } else {
+                        // Inside a string, just add the character to the current token
+                        currentToken += currentChar;
                     }
-                    else {
-                       result.add(new Token(Type.UNKNOWN, lexeme.substring(7)));
-                     }
-                  
-                     }
-            	   else {
-            		   //do nothing
-            	   }
-                }             
-               else if(lexeme.equalsIgnoreCase("DIV")) {
-            	   result.add(new Token(Type.DIV, lexeme)); 
-               }
-               else if(lexeme.equalsIgnoreCase("THEN")) {
-            	   result.add(new Token(Type.THENSYM, lexeme)); 
-               }
-               else if(lexeme.equals("*")) {
-                    result.add(new Token(Type.TIMES, lexeme));
-               }     
-               else if(lexeme.equals("+")) {
-            	   result.add(new Token(Type.PLUS, lexeme)); 
-               } 
-                else if(lexeme.equalsIgnoreCase("END.")) {
-                    result.add(new Token(Type.END, lexeme));
+                } else if (currentChar == '\'') {
+                    insideString = !insideString;
+                    currentToken += currentChar;
+                } else {
+                    // Add the character to the current token
+                    currentToken += currentChar;
                 }
-                else if(lexeme.equalsIgnoreCase("MOD")) {
-                    result.add(new Token(Type.MOD, lexeme));
-                }
-                else if(lexeme.equals("=")) {
-                    result.add(new Token(Type.EQL, lexeme));
-                }
-                else if(lexeme.equalsIgnoreCase("READ")) {
-                    result.add(new Token(Type.READ, lexeme));
-                }
-                else if(lexeme.equalsIgnoreCase("VAR")) {
-                    result.add(new Token(Type.VAR, lexeme));
-                }
-                else if(lexeme.equalsIgnoreCase("CONST")) {
-                    result.add(new Token(Type.CONST, lexeme));
-                } 
-                else if(lexeme.equalsIgnoreCase("-")) {
-                    result.add(new Token(Type.MINUS, lexeme));
-                }
-                else if (lexeme.equalsIgnoreCase("PROGRAM")) {
-                    result.add(new Token(Type.PROGRAM, lexeme));
-                }
-                else if (lexeme.equalsIgnoreCase("IF")){
-                    result.add(new Token(Type.IFSYM, lexeme));
-                }
-                else if(lexeme.equalsIgnoreCase("ELSE")) {
-                    result.add(new Token(Type.ELSESYM, lexeme));
-                 }
-                else if(lexeme.equalsIgnoreCase("INTEGER")) {
-                    result.add(new Token(Type.INTEGER, lexeme));
-                 }
-                else if(lexeme.equalsIgnoreCase("BEGIN")) {
-                    result.add(new Token(Type.BEGIN, lexeme));
-                 }
-                else if(lexeme.equals(":=")) {
-                    result.add(new Token(Type.ASSIGN_OP, lexeme));          
-                 }
-                else if(lexeme.equals(":")) {
-                    result.add(new Token(Type.COLON, lexeme));
-                 }
-                else if(lexeme.matches("-?\\d+")) {
-                    result.add(new Token(Type.NUMLIT, lexeme));		//check if its a digit using regular expression
-                 }
-                else if(lexeme.matches("^[a-zA-Z_].*$")) {
-                    result.add(new Token(Type.IDENT, lexeme));		
-                  //check if its starts with a letter of the alphabet or underscore using regular expression
-                 }
-                else {
-                	 result.add(new Token(Type.UNKNOWN, lexeme));
+            }
+
+            // Add the remaining token if it's not empty
+            if (!currentToken.isEmpty()) {
+                result.add(new Token(assign(currentToken), currentToken));
             }
         }
 
-               return result;
+        return result;
     }
+
+
+
+public static Type assign(String input) {
+    	
+         
+        if(input.equalsIgnoreCase("WRITE")) {
+    		return Type.WRITE;
+    	}
+    	else if(input.equals("=")) {
+    		return Type.EQL;
+    	}
+    	else if(input.equals(":=")) {
+    		return Type.ASSIGN_OP;
+    	}
+    	else if(input.equals(";")) {
+    		return Type.SEMICOLON;
+    	}
+    	else if(input.equals("'")) {
+    		return Type.SINQUO;
+    	}
+    	else if(input.equalsIgnoreCase("READ")) {
+    		return Type.READ;
+    	}
+    	else if(input.equalsIgnoreCase("VAR")) {
+    		return Type.VAR;
+    	}
+    	else if(input.equalsIgnoreCase("CONST")) {
+    		return Type.CONST;
+    	}
+    	else if(input.equalsIgnoreCase("PROGRAM")) {
+    		return Type.PROGRAM;
+    	}
+    	else if(input.equalsIgnoreCase("INTEGER")) {
+    		return Type.INTEGER;
+    	}
+    	else if(input.equalsIgnoreCase("DIV")) {
+    		return Type.DIV;
+    	}
+    	else if(input.equalsIgnoreCase("MOD")) {
+    		return Type.MOD;
+    	}
+    	else if(input.equalsIgnoreCase("IF")) {
+    		return Type.IFSYM;
+    	}
+    	else if(input.equalsIgnoreCase("WHILE")) {
+    		return Type.WHILE;
+    	}
+    	else if(input.equalsIgnoreCase("DO")) {
+    		return Type.DO;
+    	}
+    	else if(input.equals(")")) {
+    		return Type.RPAREN;
+    	}
+    	else if(input.equals("(")) {
+    		return Type.LPAREN;
+    	}
+    	else if(input.equals("+")) {
+    		return Type.PLUS;
+    	}
+    	else if(input.equals(",")) {
+    		return Type.COMMA;
+    	}
+    	else if(input.equals(">=")) {
+    		return Type.GEQ;
+    	}
+    	else if(input.equals("<=")) {
+    		return Type.LEQ;
+    	}
+    	else if(input.equals(">")) {
+    		return Type.GTR;
+    	}
+    	else if(input.equals("<")) {
+    		return Type.LSS;
+    	}
+    	else if(input.equals(":")) {
+    		return Type.COLON;
+    	}
+    	else if(input.equals("-")) {
+    		return Type.MINUS;
+    	}
+    	else if(input.equals("*")) {
+    		return Type.TIMES;
+    	}
+    	else if(input.equals("(*")) {
+    		return Type.BEGCOMMENT;
+    	}
+    	else if(input.equalsIgnoreCase("ELSE")) {
+    		return Type.ELSESYM;
+    	}
+    	else if(input.equalsIgnoreCase("TRUE")) {
+    		return Type.TRUESYM;
+    	}
+    	else if(input.equalsIgnoreCase("FALSE")) {
+    		return Type.FALSESYM;
+    	}
+    	else if(input.equalsIgnoreCase("END.")) {
+    		return Type.END;
+    	}
+    	else if(input.equalsIgnoreCase("THEN")) {
+    		return Type.THENSYM;
+    	}
+    	else if(input.equalsIgnoreCase("BEGIN")) {
+    		return Type.BEGIN;
+    	}
+    	else if(input.equals("*)")) {
+    		return Type.ENDCOMMENT;
+    	}
+    	else if(input.matches("^[a-zA-Z_].*$")) {
+    		return Type.IDENT;
+    	}
+    	else if(input.matches("-?\\d+")) {
+    		return Type.NUMLIT;
+    	}
+    	else {
+    	return Type.UNKNOWN;
+        }
+    }
+	
     
-    
-    public static void PROGRAM(Token t) {		 //Token PROGRAM must first appear
+public static void PROGRAM(Token t) {		 //Token PROGRAM must first appear
     	String tokenString = String.format("%-20s", t);
     	
     	if (t.t.equals(Type.PROGRAM)) {
@@ -323,7 +250,7 @@ public class SyntaxAnalyzer {
     	}
     }
     
-    public static void IDENT() { 			    //accept IDENT
+public static void IDENT() { 			    //accept IDENT
       String tokenString = String.format("%-20s", tokens.get(i));
       if (tokens.get(i).t.equals(Type.IDENT)) {
     	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -336,7 +263,7 @@ public class SyntaxAnalyzer {
     }
     
     
-    public static void SEMICOLON() {					//accept SEMICOLON
+ public static void SEMICOLON() {					//accept SEMICOLON
     	 String tokenString = String.format("%-20s", tokens.get(i));
     	 
     	  if (tokens.get(i).t.equals(Type.SEMICOLON)) {
@@ -350,7 +277,7 @@ public class SyntaxAnalyzer {
        }
     	
    
-    public static void EXPR() {
+public static void EXPR() {
      	 
         if(tokens.get(i).t.equals(Type.VAR)) {		//variable declarations
     	   VAR();
@@ -384,7 +311,7 @@ public class SyntaxAnalyzer {
        EXPR();    //continuously call the method until "begin" appears 
     }
     
-    public static void MOREVAR() {			//if there are more variable declarations 
+public static void MOREVAR() {			//if there are more variable declarations 
     	
     	if(tokens.get(i).t.equals(Type.IDENT) && tokens.get(i+1).t.equals(Type.COLON)) {	
     	   IDENT();  
@@ -399,7 +326,7 @@ public class SyntaxAnalyzer {
     	
     }
     
-   public static void BEGIN() {
+public static void BEGIN() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
     	if (tokens.get(i).t.equals(Type.BEGIN)) {
  		   System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -526,7 +453,7 @@ public class SyntaxAnalyzer {
     }
    
     
-   public static void BEGCOMMENT() {		//accept the beginning of a comment 
+public static void BEGCOMMENT() {		//accept the beginning of a comment 
 	    String tokenString = String.format("%-20s", tokens.get(i));
        if(tokens.get(i).t.equals(Type.BEGCOMMENT)) {
     	   System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -542,7 +469,7 @@ public class SyntaxAnalyzer {
     	       i++;
     	   } 
      } 	
-   public static void DO() {
+public static void DO() {
 	  String tokenString = String.format("%-20s", tokens.get(i));
        if(tokens.get(i).t.equals(Type.DO)) {
     	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -554,7 +481,7 @@ public class SyntaxAnalyzer {
     	 } 
    }
    
-   public static void FOR() {
+public static void FOR() {
 	  String tokenString = String.format("%-20s", tokens.get(i));
        if(tokens.get(i).t.equals(Type.FOR)) {
     	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -566,7 +493,7 @@ public class SyntaxAnalyzer {
     	 } 
    }
    
-   public static void GTR() {
+ public static void GTR() {
 	  String tokenString = String.format("%-20s", tokens.get(i));
        if(tokens.get(i).t.equals(Type.GTR)) {
     	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -578,7 +505,7 @@ public class SyntaxAnalyzer {
     	 } 
    }
    
-   public static void LSS() {
+public static void LSS() {
 		  String tokenString = String.format("%-20s", tokens.get(i));
 	       if(tokens.get(i).t.equals(Type.LSS)) {
 	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -590,7 +517,7 @@ public class SyntaxAnalyzer {
 	    	 } 
 	   }
    
-   public static void WHILE() {
+public static void WHILE() {
 		String tokenString = String.format("%-20s", tokens.get(i));
 	       if(tokens.get(i).t.equals(Type.WHILE)) {
 	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -604,7 +531,7 @@ public class SyntaxAnalyzer {
    
    
    
-   public static void ENDCOMMENT() {			                     //accept the end of the comment 
+public static void ENDCOMMENT() {			                     //accept the end of the comment 
 	   String tokenString = String.format("%-20s", tokens.get(i));
        if(tokens.get(i).t.equals(Type.ENDCOMMENT)) {
     	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -617,7 +544,7 @@ public class SyntaxAnalyzer {
     } 	
    
    
-   public static void END() {
+ public static void END() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
        
 	   if(tokens.get(i).t.equals(Type.END)) {
@@ -643,7 +570,7 @@ public class SyntaxAnalyzer {
 	    	 } 
 	   }
     	
-    public static void ENDRESULT() {
+ public static void ENDRESULT() {
       
     	if(tokens.get(i).t.equals(Type.BEGCOMMENT)) {		// see if any comments exist after END.
  	    	BEGCOMMENT();
@@ -655,7 +582,7 @@ public class SyntaxAnalyzer {
     	}
     }
     
-    public static void DIV() {
+public static void DIV() {
     	String tokenString = String.format("%-20s", tokens.get(i));
        if(tokens.get(i).t.equals(Type.DIV)) {
     	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -667,7 +594,7 @@ public class SyntaxAnalyzer {
     	  	 } 
     	 } 	
     
-    public static void TIMES() {
+public static void TIMES() {
     	String tokenString = String.format("%-20s", tokens.get(i));
         if(tokens.get(i).t.equals(Type.TIMES)) {
      	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -679,7 +606,7 @@ public class SyntaxAnalyzer {
      	    } 
      	 } 	 
     	
-    public static void MOD() {
+ public static void MOD() {
     	String tokenString = String.format("%-20s", tokens.get(i));
         if(tokens.get(i).t.equals(Type.MOD)) {
   		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -692,7 +619,7 @@ public class SyntaxAnalyzer {
     }
     	
     	
-   public static void MINUS() {
+ public static void MINUS() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
 	   if(tokens.get(i).t.equals(Type.MINUS)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -704,7 +631,7 @@ public class SyntaxAnalyzer {
 	     } 
    }
     
-   public static void PLUS() {
+public static void PLUS() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
 	   if (tokens.get(i).t.equals(Type.PLUS)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -715,7 +642,7 @@ public class SyntaxAnalyzer {
 			i++;
 	     } 
    }
-   public static void ASSIGN_OP() {
+public static void ASSIGN_OP() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
 	   if (tokens.get(i).t.equals(Type.ASSIGN_OP)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -726,7 +653,7 @@ public class SyntaxAnalyzer {
 			i++;
 	     } 
    }
-    public static void IF() {
+public static void IF() {
     	 String tokenString = String.format("%-20s", tokens.get(i));
     	 if (tokens.get(i).t.equals(Type.IFSYM)) {
  		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -738,7 +665,7 @@ public class SyntaxAnalyzer {
  	     } 
     }
    
-    public static void THEN() {
+public static void THEN() {
        String tokenString = String.format("%-20s", tokens.get(i));
    	   if (tokens.get(i).t.equals(Type.THENSYM)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -750,7 +677,7 @@ public class SyntaxAnalyzer {
 	     } 
     }
     
-    public static void VAR() { 
+ public static void VAR() { 
     	 String tokenString = String.format("%-20s", tokens.get(i));
     	 if (tokens.get(i).t.equals(Type.VAR)) {
     		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -762,7 +689,7 @@ public class SyntaxAnalyzer {
     	     } 
      }
     
-    public static void COLON() {
+public static void COLON() {
        String tokenString = String.format("%-20s", tokens.get(i));
        if (tokens.get(i).t.equals(Type.COLON)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -775,7 +702,7 @@ public class SyntaxAnalyzer {
      }
    	
     
-   public static void INTEGER() {
+public static void INTEGER() {
 	  String tokenString = String.format("%-20s", tokens.get(i));
       if (tokens.get(i).t.equals(Type.INTEGER)) {
  		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -787,7 +714,7 @@ public class SyntaxAnalyzer {
  	     }	 	
     }
    
-   public static void CONST() {	   
+ public static void CONST() {	   
 	   String tokenString = String.format("%-20s", tokens.get(i));
 	   if (tokens.get(i).t.equals(Type.CONST)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -800,7 +727,7 @@ public class SyntaxAnalyzer {
 	   
    }
    
-   public static void EQL() {
+public static void EQL() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
 	   if (tokens.get(i).t.equals(Type.EQL)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -813,7 +740,7 @@ public class SyntaxAnalyzer {
    }
    
    
-   public static void NUMLIT() {
+public static void NUMLIT() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
 	   if (tokens.get(i).t.equals(Type.NUMLIT)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -825,7 +752,7 @@ public class SyntaxAnalyzer {
 	     }	
      }
     
-   public static void WRITE() {
+ public static void WRITE() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
 	   if (tokens.get(i).t.equals(Type.WRITE)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -837,7 +764,7 @@ public class SyntaxAnalyzer {
 	     }	
      }
   
-   public static void LPAREN() {
+public static void LPAREN() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
 	   if (tokens.get(i).t.equals(Type.LPAREN)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -849,7 +776,7 @@ public class SyntaxAnalyzer {
 	     }	
      }
    
-   public static void SINGQUO() {
+ public static void SINGQUO() {
 	   String tokenString = String.format("%-20s", tokens.get(i));
 	   if (tokens.get(i).t.equals(Type.SINQUO)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -861,7 +788,7 @@ public class SyntaxAnalyzer {
 	    } 
      }
    
-  public static void RPAREN() {
+public static void RPAREN() {
 	  String tokenString = String.format("%-20s", tokens.get(i));
 	  if (tokens.get(i).t.equals(Type.RPAREN)) {
 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -873,7 +800,7 @@ public class SyntaxAnalyzer {
 	    } 
    }
     
-  public static void READ() {
+ public static void READ() {
 	  String tokenString = String.format("%-20s", tokens.get(i));
 	  if (tokens.get(i).t.equals(Type.READ)) {
 		   System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
@@ -885,7 +812,7 @@ public class SyntaxAnalyzer {
 	    } 
   }
     
-    public static void main(String[] args) throws FileNotFoundException {
+ public static void main(String[] args) throws FileNotFoundException {
        
         try {
             Scanner s = new Scanner(new File("/Users/sotirisemmanouil/eclipse-workspace/CS316 Project 2/src/test1.pas"));
