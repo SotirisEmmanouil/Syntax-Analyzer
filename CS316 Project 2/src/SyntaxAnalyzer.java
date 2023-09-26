@@ -155,6 +155,9 @@ public static Type assign(String input) {
     	else if(input.equalsIgnoreCase("IF")) {
     		return Type.IFSYM;
     	}
+	else if(input.equalsIgnoreCase("FOR")) {
+    		return Type.FOR;
+    	}
     	else if(input.equalsIgnoreCase("WHILE")) {
     		return Type.WHILE;
     	}
