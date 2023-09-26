@@ -149,6 +149,9 @@ public static Type assign(String input) {
     	else if(input.equalsIgnoreCase("DIV")) {
     		return Type.DIV;
     	}
+	else if(input.equalsIgnoreCase("TO")) {
+    		return Type.TO;
+    	}
     	else if(input.equalsIgnoreCase("MOD")) {
     		return Type.MOD;
     	}
