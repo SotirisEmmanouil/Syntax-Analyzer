@@ -290,7 +290,7 @@ public class SyntaxAnalyzer {
 		    	ENDCOMMENT();	
 		    }
 	      else {
-	      System.out.println("INCORRECT TOKEN, VAR, CONST BEGIN, OR BEGCOMMENT EXPECTED,    CURRENT TOKEN: "+tokens.get(i));
+	      System.out.println("INCORRECT TOKEN, VAR, CONST BEGIN, OR BEGCOMMENT EXPECTED.    CURRENT TOKEN: "+tokens.get(i));
 	      	 i++;
 	      }       
 	       EXPR();    //continuously call the method until "begin" appears 
