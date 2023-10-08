@@ -8,13 +8,12 @@ import java.util.ArrayList;
 /*
   Syntax analyzer for a subset of the Pascal language
 
-  Methods used to perform the Syntax Analysis:
-  Accept()
-  MOREVAR()
-  EXPR()
-  PROGRAM()
-  MAINEXPR()
-  ENDRESULT()
+  Methods used for the Syntax Analysis:
+	Accept()
+        MOREVAR()
+	EXPR()
+ 	MAINEXPR()
+        PROGRAM()
  */
 
 public class SyntaxAnalyzer {
@@ -263,7 +262,14 @@ public class SyntaxAnalyzer {
 	    	else if(tokens.get(i).t.equals(Type.END)) {
 		    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
 		    	  	 i++;
-		    	  	 ENDRESULT();
+		    	 	if(tokens.get(i).t.equals(Type.BEGCOMMENT)) {		// see if any comments exist after END.
+			 	    	Accept(Type.BEGCOMMENT);
+			 	    	Accept(Type.ENDCOMMENT);
+			 	     }   //comments 
+			    	else {
+			    	   System.out.println("ERROR ONLY COMMENTS CAN EXIST!");
+			    	   System.exit(0);		//if no comments, end the syntax analysis
+			    	}
 		      }
 	    	
 	    	else if(tokens.get(i).t.equals(token)) {
@@ -328,7 +334,9 @@ public class SyntaxAnalyzer {
 	    	
 	    }
 	    	
-	   public static void MAINEXPR() { 
+	   public static void MAINEXPR() {
+	        String tokenString = String.format("%-20s", tokens.get(i));
+	    	 
 	        if(tokens.get(i).t.equals(Type.WRITE)) {
 	 	    	  
 	        	 Accept(Type.WRITE);
@@ -483,7 +491,7 @@ public class SyntaxAnalyzer {
 	 	    }   //comments 
 	 	   
 	 	   else if(tokens.get(i).t.equals(Type.END)) {
-	 		   Accept(Type.END);
+	 		  Accept(Type.END);
 		    }   
 	 	    else {
 	 	    	System.out.println("Incorrect Token: " +tokenString);
@@ -491,18 +499,7 @@ public class SyntaxAnalyzer {
 	 			MAINEXPR();		 
 	 	     } 
 	    	
-	    }
-	    	
-	 public static void ENDRESULT() {
-	    	if(tokens.get(i).t.equals(Type.BEGCOMMENT)) {		// see if any comments exist after END.
-	 	    	Accept(Type.BEGCOMMENT);
-	 	    	Accept(Type.ENDCOMMENT);
-	 	     }   //comments 
-	    	else {
-	    	   System.out.println("ERROR ONLY COMMENTS CAN EXIST!");
-	    	   System.exit(0);		//if no comments, end the syntax analysis
-	    	}
-	    }	   	
+	    }   	
 	    
 	 public static void main(String[] args) throws FileNotFoundException {
 	       
