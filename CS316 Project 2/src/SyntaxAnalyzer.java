@@ -485,7 +485,7 @@ public class SyntaxAnalyzer {
 	 	    }   //comments 
 	 	   
 	 	   else if(tokens.get(i).t.equals(Type.END)) {
-	 		   //END();
+	 		   Accept(Type.END);
 		    }   
 	 	    else {
 	 	    	System.out.println("Incorrect Token: " +tokenString);
