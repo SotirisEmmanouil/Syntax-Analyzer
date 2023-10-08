@@ -328,9 +328,7 @@ public class SyntaxAnalyzer {
 	    	
 	    }
 	    	
-	   public static void MAINEXPR() {
-	        String tokenString = String.format("%-20s", tokens.get(i));
-	    	 
+	   public static void MAINEXPR() { 
 	        if(tokens.get(i).t.equals(Type.WRITE)) {
 	 	    	  
 	        	 Accept(Type.WRITE);
