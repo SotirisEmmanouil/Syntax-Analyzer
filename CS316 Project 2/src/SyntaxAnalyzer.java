@@ -7,13 +7,20 @@ import java.util.ArrayList;
 
 /*
   Syntax analyzer for a subset of the Pascal language
+
+  Methods used to perform the Syntax Analysis:
+  Accept()
+  MOREVAR()
+  EXPR()
+  PROGRAM()
+  MAINEXPR()
+  ENDRESULT()
  */
 
 public class SyntaxAnalyzer {
 	
 	static int i = 0; 
 	static List<Token> tokens = null;
-	String tokenString = String.format("%-20s", tokens.get(i));
 	
 	public static class Token {
        
@@ -221,76 +228,86 @@ public class SyntaxAnalyzer {
 	    	if (t.t.equals(Type.PROGRAM)) {
 	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+t.getLexeme());
 	    	    i++;
-	    		IDENT();
-	    		SEMICOLON();
+	    	    Accept(Type.IDENT);
+	    	    Accept(Type.SEMICOLON);
 	    		EXPR();
 	    	}
 	    	else {
 	    		System.out.println("Incorrect Token: " +tokenString+"   Token: PROGRAM expected");
 	    	    i++;
-	    		IDENT();
-	    		SEMICOLON();
+	    	    Accept(Type.IDENT);
+	    	    Accept(Type.SEMICOLON);
 	    		EXPR();
 	    		
 	    	}
 	    }
 	    
-	public static void IDENT() { 			    //accept IDENT
-	      String tokenString = String.format("%-20s", tokens.get(i));
-	      if (tokens.get(i).t.equals(Type.IDENT)) {
-	    	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	 i++;
-	    }
-	    else {
-	    	System.out.println("Incorrect Token: " +tokenString+"   Token: IDENT expected");
-			 i++;
-	       }    	       	
+	 public static void Accept(Type token) {
+	    	String tokenString = String.format("%-20s", tokens.get(i));
+	       
+	    	if(tokens.get(i).t.equals(Type.BEGCOMMENT)) {
+	 	    	   System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
+	 	    	   i++;
+	 	    	   
+	 	    	   while(!tokens.get(i).t.equals(Type.ENDCOMMENT)) {		//ignore the comment until the ENDCOMMENT token appears
+	 	    	       System.out.println("Ignored comment: "+tokens.get(i));  		      		   
+	 	    		   i++;  
+	 	    	   }
+	 	    	}  
+	    	else if (tokens.get(i).t.equals(Type.BEGIN)) {
+		 		   System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
+		 	    	i++;
+		 	        MAINEXPR();		//analyze the expressions that will come after BEGIN
+		    	}
+	    	
+	    	else if(tokens.get(i).t.equals(Type.END)) {
+		    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
+		    	  	 i++;
+		    	  	 ENDRESULT();
+		      }
+	    	
+	    	else if(tokens.get(i).t.equals(token)) {
+	    		System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+ tokens.get(i).getLexeme());
+	    		i++;
+	    	  }
+	    	     	    	    	
+	    	 else {
+	    	     System.out.println("Incorrect Token: " +tokenString+"   Token: "+ token+ " expected");
+	   			 i++; 
+	    	 }
 	    }
 	    
-	    
-	 public static void SEMICOLON() {					//accept SEMICOLON
-	    	 String tokenString = String.format("%-20s", tokens.get(i));
-	    	 
-	    	  if (tokens.get(i).t.equals(Type.SEMICOLON)) {
-	    	    	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	    	i++;
-	    	    }
-	    	    else {
-	    	    	System.out.println("Incorrect Token: " +tokenString+"   Token: SEMICOLON expected");
-	    			i++;
-	    	   }    	       	
-	       }
 	    	
 	   
 	public static void EXPR() {
 	     	 
 	        if(tokens.get(i).t.equals(Type.VAR)) {		//variable declarations
-	    	   VAR();
-	    	   IDENT();  
-	    	   COLON();
-	    	   INTEGER();
-	    	   SEMICOLON();
+	           Accept(Type.VAR);
+	    	   Accept(Type.IDENT);
+	    	   Accept(Type.COLON);
+	    	   Accept(Type.INTEGER);
+	    	   Accept(Type.SEMICOLON);
 	    	   MOREVAR();
 	         }
 	     
 	        if(tokens.get(i).t.equals(Type.CONST)) {		//constant declarations
-	   	       CONST();
-	   	       IDENT();  
-	   	       EQL();
-	   	       NUMLIT();
-	   	       SEMICOLON();
+	          Accept(Type.CONST);
+	          Accept(Type.IDENT);
+	          Accept(Type.EQL);
+	          Accept(Type.NUMLIT);
+	          Accept(Type.SEMICOLON);
 	   	    }
 	     
 	      if(tokens.get(i).t.equals(Type.BEGIN)) {		//branch out 
-	    	    BEGIN();
+	    	   Accept(Type.BEGIN);
 	        }
 	      
 	      if(tokens.get(i).t.equals(Type.BEGCOMMENT)) {		//handle comments 
-		    	BEGCOMMENT();
-		    	ENDCOMMENT();	
+		    	Accept(Type.BEGCOMMENT);
+		    	Accept(Type.ENDCOMMENT);
 		    }
 	      else {
-	      System.out.println("INCORRECT TOKEN, VAR, CONST BEGIN, OR BEGCOMMENT EXPECTED.    CURRENT TOKEN: "+tokens.get(i));
+	      System.out.println("INCORRECT TOKEN, VAR, CONST BEGIN, OR BEGCOMMENT EXPECTED,        CURRENT TOKEN: "+tokens.get(i));
 	      	 i++;
 	      }       
 	       EXPR();    //continuously call the method until "begin" appears 
@@ -299,165 +316,159 @@ public class SyntaxAnalyzer {
 	public static void MOREVAR() {			//if there are more variable declarations 
 	    	
 	    	if(tokens.get(i).t.equals(Type.IDENT) && tokens.get(i+1).t.equals(Type.COLON)) {	
-	    	   IDENT();  
-	       	   COLON();
-	       	   INTEGER();
-	       	   SEMICOLON();
-	       	   MOREVAR();
+	    	  Accept(Type.IDENT);
+	    	  Accept(Type.COLON);
+	    	  Accept(Type.INTEGER);
+	    	  Accept(Type.SEMICOLON);
+	       	  MOREVAR();
 	    	}
 	    	else {
 	    	   EXPR();		//if there are no more variables left to declare, go back to expressions
 	    	}
 	    	
 	    }
-	    
-	public static void BEGIN() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-	    	if (tokens.get(i).t.equals(Type.BEGIN)) {
-	 		   System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	 	    	i++;
-	 	        MAINEXPR();		//analyze the expressions that will come after BEGIN
-	    	}
-	   }
 	    	
 	   public static void MAINEXPR() {
 	        String tokenString = String.format("%-20s", tokens.get(i));
 	    	 
 	        if(tokens.get(i).t.equals(Type.WRITE)) {
-	 	    	   WRITE();
-	 	    	   LPAREN();
-	 	    	   SINGQUO();				//matches quotes
 	 	    	  
-	 	    	   while(!tokens.get(i).t.equals(Type.SINQUO))  {
+	        	 Accept(Type.WRITE);
+	        	 Accept(Type.LPAREN);
+	        	 Accept(Type.SINQUO);
+	 	    	  
+	 	    	 while(!tokens.get(i).t.equals(Type.SINQUO))  {
 	 	    	   System.out.println(tokens.get(i).getLexeme());	//print string that is located in write function
 	 	    	   i++;
-	 	    	   }
-	 	    	   
-	 	    	   SINGQUO();			   //matches quotes
-	 	    	   RPAREN();			  //matches parenthesis 
-	 	    	   SEMICOLON();
+	 	    	 }
+	 	    	 
+	 	    	 Accept(Type.SINQUO);
+	 	    	 Accept(Type.RPAREN);
+	 	    	 Accept(Type.SEMICOLON);
 	 	       } //end write if
 	 	      
 	 	      if(tokens.get(i).t.equals(Type.READ)) {
-	 	   	       READ();
-	 	   	       LPAREN();  
-	 	   	       IDENT();
-	 	   	       RPAREN();
-	 	   	       SEMICOLON();
+	 	    	 Accept(Type.READ);
+	 	    	 Accept(Type.LPAREN);
+	 	    	 Accept(Type.IDENT);
+	 	    	 Accept(Type.RPAREN);
+	 	    	 Accept(Type.SEMICOLON);
 	 	   	  }
 	 	      
-	 	      
 	 	     if(tokens.get(i).t.equals(Type.FOR)) {
-		   	       FOR(); 
-		   	       IDENT();
-		   	       ASSIGN_OP();
-		   	       NUMLIT();
-		   	       TO();
-		   	       NUMLIT();
+	 	    	 Accept(Type.FOR);
+	 	    	 Accept(Type.IDENT);
+	 	    	 Accept(Type.ASSIGN_OP);
+	 	    	 Accept(Type.NUMLIT);
+	 	    	 Accept(Type.TO);
+	 	    	 Accept(Type.NUMLIT);
 		   	  }
 	 	   
 	 	     if(tokens.get(i).t.equals(Type.WHILE)) {
-		   	       WHILE(); 
-		   	       IDENT();
+	 	    	 Accept(Type.WHILE);
+	 	    	 Accept(Type.IDENT);
+	 	   
 		   	     if(tokens.get(i).t.equals(Type.GTR)) {
-		   	        GTR();
+		   	    	 Accept(Type.GTR);
 		   	      }
 		   	     else if(tokens.get(i).t.equals(Type.LSS)) {
-			   	    LSS();
+		   	    	 Accept(Type.LSS);
 		   	      }
 		   	     else if(tokens.get(i).t.equals(Type.GEQ)) {
-			   	    GEQ();
+		   	    	 Accept(Type.GEQ);
 		   	      }
 		   	     else if(tokens.get(i).t.equals(Type.LEQ)) {
-			   	    LEQ();
+		   	    	 Accept(Type.LEQ);
 		   	      }
 		   	     else if(tokens.get(i).t.equals(Type.EQL)) {
-			   	    EQL();
+		   	    	 Accept(Type.EQL);
 		   	      }
 		   	      else {
 		   	    	 System.out.println("COMPARISON OPERATOR EXPECTED");
 		   	    	 i++;
 		   	     }
-		   	      NUMLIT();
-		   	      DO();
+		   	     Accept(Type.NUMLIT);
+		   	     Accept(Type.DO);
 		   	  }
 	 	     
 	 	    
 	 	     if(tokens.get(i).t.equals(Type.IFSYM)) {
-	 	    	    IF();
-	 	    	    LPAREN();
+	 	    	 Accept(Type.IFSYM);
+	 	    	 Accept(Type.LPAREN);
+	 	    	 
 	 	        if(tokens.get(i).t.equals(Type.NUMLIT)) {
-		 	   		NUMLIT();
+	 	        	 Accept(Type.NUMLIT);
 		 	   	 }
 	 	        else if(tokens.get(i).t.equals(Type.IDENT)) {
-	 	    	     IDENT();
+	 	        	 Accept(Type.IDENT);
 	 	   	     }
 	 	        else {
 	 	        	System.out.println("NUMLIT OR IDENT EXPECTED");
 	 	        	i++;
 	 	         }
 	 	          if(tokens.get(i).t.equals(Type.GTR)) {
-		   	        GTR();
+	 	        	 Accept(Type.GTR);
 		   	      }
 		   	     else if(tokens.get(i).t.equals(Type.LSS)) {
-			   	    LSS();
+		   	    	 Accept(Type.LSS);
 		   	      }
 		   	     else if(tokens.get(i).t.equals(Type.GEQ)) {
-			   	    GEQ();
+		   	    	 Accept(Type.GEQ);
 		   	      }
 		   	     else if(tokens.get(i).t.equals(Type.LEQ)) {
-			   	    LEQ();
+		   	    	 Accept(Type.LEQ);
 		   	      }
 		   	     else if(tokens.get(i).t.equals(Type.EQL)) {
-			   	    EQL();
+		   	    	 Accept(Type.EQL);
 		   	      }
 		   	     else {
 		   	    	System.out.println("COMPARISON OPERATOR EXPECTED");
 		   	    	i++;
 		   	     }
 	 	         if(tokens.get(i).t.equals(Type.NUMLIT)) {
-			 	   		NUMLIT();
+	 	        	     Accept(Type.NUMLIT);
 			 	   	 }
 		 	        else if(tokens.get(i).t.equals(Type.IDENT)) {
-		 	    	     IDENT();
+		 	        	 Accept(Type.IDENT);
+		 	        	
 		 	   	     }
 		 	        else {
 		 	        	System.out.println("NUMLIT OR IDENT EXPECTED");
 		 	        	i++;
 		 	         }
-	 	    	    RPAREN();
-	 	    	    THEN();   	
+	 	             Accept(Type.RPAREN);
+	 	             Accept(Type.THENSYM);	
 	 	     } 
 	 	   
 	 	     if(tokens.get(i).t.equals(Type.IDENT)) {		//IDENT IF STATEMENT START
-	 	    	   IDENT();
-	 	    	   ASSIGN_OP();
-	 	    	   IDENT();
+	 	    	    Accept(Type.IDENT);
+	 	    	    Accept(Type.ASSIGN_OP);
+	 	    	    Accept(Type.IDENT);
 	 	    	   
 	 	        if(tokens.get(i).t.equals(Type.PLUS)) {
-	 	      	    PLUS();
-	 	      	    NUMLIT();
-	 	      	    SEMICOLON();
+	 	        	 Accept(Type.PLUS);
+	 	        	 Accept(Type.NUMLIT);
+	 	        	 Accept(Type.SEMICOLON);
 	 	        }
 	 	        else if(tokens.get(i).t.equals(Type.MINUS)) {
-	 	    	    MINUS();
-	 	    	    NUMLIT();
-		      	    SEMICOLON();
+	 	        	 Accept(Type.MINUS);
+	 	        	 Accept(Type.NUMLIT);
+	 	        	 Accept(Type.SEMICOLON);
 	 	        }
 	 	        else if(tokens.get(i).t.equals(Type.MOD)) {
-		    	    MOD();
-		    	    NUMLIT();
-	 	      	    SEMICOLON();
+	 	        	 Accept(Type.MOD);
+	 	        	 Accept(Type.NUMLIT);
+	 	        	 Accept(Type.SEMICOLON);
 		        }
 	 	        else if(tokens.get(i).t.equals(Type.DIV)) {
-		    	    DIV();
-		    	    NUMLIT();
-	 	      	    SEMICOLON();
+	 	        	 Accept(Type.DIV);
+	 	        	 Accept(Type.NUMLIT);
+	 	        	 Accept(Type.SEMICOLON);
 		      }
 	 	        else if(tokens.get(i).t.equals(Type.TIMES)) {
-		    	    TIMES();
-		    	    NUMLIT();
-	 	      	    SEMICOLON();
+	 	        	 Accept(Type.TIMES);
+	 	        	 Accept(Type.NUMLIT);
+	 	        	 Accept(Type.SEMICOLON);
 		      }
 	 	         else {
 	 	    	 System.out.println("ARITHMETIC OPERATOR EXPECTED");
@@ -468,13 +479,13 @@ public class SyntaxAnalyzer {
 	 	    }							//end IDENT if statement 
 	 	    
 	 	   else if(tokens.get(i).t.equals(Type.BEGCOMMENT)) {
-	 	    	BEGCOMMENT();
-	 	    	ENDCOMMENT();	
+	 	    	Accept(Type.BEGCOMMENT);
+	 	    	Accept(Type.ENDCOMMENT);
 	 	    	MAINEXPR();	
 	 	    }   //comments 
 	 	   
 	 	   else if(tokens.get(i).t.equals(Type.END)) {
-		    	END();
+	 		   //END();
 		    }   
 	 	    else {
 	 	    	System.out.println("Incorrect Token: " +tokenString);
@@ -483,389 +494,17 @@ public class SyntaxAnalyzer {
 	 	     } 
 	    	
 	    }
-	   
-	    
-	public static void BEGCOMMENT() {		//accept the beginning of a comment 
-		    String tokenString = String.format("%-20s", tokens.get(i));
-	       if(tokens.get(i).t.equals(Type.BEGCOMMENT)) {
-	    	   System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	   i++;
-	    	   
-	    	   while(!tokens.get(i).t.equals(Type.ENDCOMMENT)) {		//ignore the comment until the ENDCOMMENT token appears
-	    	       System.out.println("Ignored comment: "+tokens.get(i));  		      		   
-	    		   i++;  
-	    	   }
-	    	}       	    	    	
-	    	 else {
-	    	     System.out.println("Incorrect Token: "+tokenString+"   Token: BEGCOMMENT expected");
-	    	       i++;
-	    	   } 
-	     } 	
-	public static void DO() {
-		  String tokenString = String.format("%-20s", tokens.get(i));
-	       if(tokens.get(i).t.equals(Type.DO)) {
-	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	  	i++;
-	    	 }
-	    	   else {
-	    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: DO expected");
-	    	  	 i++;
-	    	 } 
-	   }
-
-	public static void GEQ() {
-		  String tokenString = String.format("%-20s", tokens.get(i));
-	       if(tokens.get(i).t.equals(Type.GEQ)) {
-	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	  	i++;
-	    	 }
-	    	   else {
-	    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: GEQ expected");
-	    	  	 i++;
-	    	 } 
-	   }
-	public static void LEQ() {
-		  String tokenString = String.format("%-20s", tokens.get(i));
-	       if(tokens.get(i).t.equals(Type.LEQ)) {
-	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	  	i++;
-	    	 }
-	    	   else {
-	    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: LEQ expected");
-	    	  	 i++;
-	    	 } 
-	   }
-	   
-	public static void FOR() {
-		  String tokenString = String.format("%-20s", tokens.get(i));
-	       if(tokens.get(i).t.equals(Type.FOR)) {
-	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	  	i++;
-	    	 }
-	    	   else {
-	    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: FOR expected");
-	    	  	 i++;
-	    	 } 
-	   }
-	   
-	 public static void GTR() {
-		  String tokenString = String.format("%-20s", tokens.get(i));
-	       if(tokens.get(i).t.equals(Type.GTR)) {
-	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	  	i++;
-	    	 }
-	    	   else {
-	    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: GTR expected");
-	    	  	 i++;
-	    	 } 
-	   }
-	   
-	public static void LSS() {
-			  String tokenString = String.format("%-20s", tokens.get(i));
-		       if(tokens.get(i).t.equals(Type.LSS)) {
-		    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	  	i++;
-		    	 }
-		    	   else {
-		    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: LSS expected");
-		    	  	 i++;
-		    	 } 
-		   }
-	   
-	public static void WHILE() {
-			String tokenString = String.format("%-20s", tokens.get(i));
-		       if(tokens.get(i).t.equals(Type.WHILE)) {
-		    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	  	i++;
-		    	 }
-		    	   else {
-		    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: WHILE expected");
-		    	  	 i++;
-		    	 } 
-		   }
-	   
-	   
-	   
-	public static void ENDCOMMENT() {			                     //accept the end of the comment 
-		   String tokenString = String.format("%-20s", tokens.get(i));
-	       if(tokens.get(i).t.equals(Type.ENDCOMMENT)) {
-	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	  	i++;
-	    	 }
-	    	   else {
-	    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: ENDCOMMENT expected");
-	    	  	 i++;
-	    	 } 
-	    } 	
-	   
-	   
-	 public static void END() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-	       
-		   if(tokens.get(i).t.equals(Type.END)) {
-	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	  	 i++;
-	    	  	 ENDRESULT();
-	    	  }
-	    	  else {
-	    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: END expected");
-	    	  	 i++;
-	    	  	} 
-	     } 
-	   
-	   public static void TO() {
-			  String tokenString = String.format("%-20s", tokens.get(i));
-		       if(tokens.get(i).t.equals(Type.TO)) {
-		    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	  	i++;
-		    	 }
-		    	   else {
-		    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: TO expected");
-		    	  	 i++;
-		    	 } 
-		   }
 	    	
 	 public static void ENDRESULT() {
-	      
 	    	if(tokens.get(i).t.equals(Type.BEGCOMMENT)) {		// see if any comments exist after END.
-	 	    	BEGCOMMENT();
-	 	    	ENDCOMMENT();	
+	 	    	Accept(Type.BEGCOMMENT);
+	 	    	Accept(Type.ENDCOMMENT);
 	 	     }   //comments 
 	    	else {
 	    	   System.out.println("ERROR ONLY COMMENTS CAN EXIST!");
 	    	   System.exit(0);		//if no comments, end the syntax analysis
 	    	}
-	    }
-	    
-	public static void DIV() {
-	    	String tokenString = String.format("%-20s", tokens.get(i));
-	       if(tokens.get(i).t.equals(Type.DIV)) {
-	    	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	  	   i++;
-	    	  	 }
-	    	  else {
-	    	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: DIV expected");
-	    	  	 i++;
-	    	  	 } 
-	    	 } 	
-	    
-	public static void TIMES() {
-	    	String tokenString = String.format("%-20s", tokens.get(i));
-	        if(tokens.get(i).t.equals(Type.TIMES)) {
-	     	    System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	     	  	   i++;
-	     	  	 }
-	     	  else {
-	     	  	 System.out.println("Incorrect Token: " +tokenString+"   Token: TIMES expected");
-	     	  	 i++;
-	     	    } 
-	     	 } 	 
-	    	
-	 public static void MOD() {
-	    	String tokenString = String.format("%-20s", tokens.get(i));
-	        if(tokens.get(i).t.equals(Type.MOD)) {
-	  		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	  	    	i++;
-	  	    }
-	  	    else {
-	  	    	System.out.println("Incorrect Token: " +tokenString+"   Token: MOD expected");
-	  			i++;
-	  	     } 
-	    }
-	    	
-	    	
-	 public static void MINUS() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-		   if(tokens.get(i).t.equals(Type.MINUS)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		    else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: MINUS expected");
-				i++;
-		     } 
-	   }
-	    
-	public static void PLUS() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-		   if (tokens.get(i).t.equals(Type.PLUS)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		    else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: PLUS expected");
-				i++;
-		     } 
-	   }
-	public static void ASSIGN_OP() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-		   if (tokens.get(i).t.equals(Type.ASSIGN_OP)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		    else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: ASSIGN_OP expected");
-				i++;
-		     } 
-	   }
-	public static void IF() {
-	    	 String tokenString = String.format("%-20s", tokens.get(i));
-	    	 if (tokens.get(i).t.equals(Type.IFSYM)) {
-	 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	 	    	i++;
-	 	    }
-	 	    else {
-	 	    	System.out.println("Incorrect Token: " +tokenString+"   Token: IFSYM expected");
-	 			i++;
-	 	     } 
-	    }
-	   
-	public static void THEN() {
-	       String tokenString = String.format("%-20s", tokens.get(i));
-	   	   if (tokens.get(i).t.equals(Type.THENSYM)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		    else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: THENSYM expected");
-				i++;
-		     } 
-	    }
-	    
-	 public static void VAR() { 
-	    	 String tokenString = String.format("%-20s", tokens.get(i));
-	    	 if (tokens.get(i).t.equals(Type.VAR)) {
-	    		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	    	    	i++;
-	    	    }
-	    	    else {
-	    	    	System.out.println("Incorrect Token: " +tokenString+"   Token: SEMICOLON expected");
-	    			i++;
-	    	     } 
-	     }
-	    
-	public static void COLON() {
-	       String tokenString = String.format("%-20s", tokens.get(i));
-	       if (tokens.get(i).t.equals(Type.COLON)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		    else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: COLON expected");
-				i++;
-		     } 
-	     }
-	   	
-	    
-	public static void INTEGER() {
-		  String tokenString = String.format("%-20s", tokens.get(i));
-	      if (tokens.get(i).t.equals(Type.INTEGER)) {
-	 		  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-	 	    	i++;
-	 	    }
-	 	  else {
-	 	    	System.out.println("Incorrect Token: " +tokenString+"   Token: INTEGER expected");
-	 			i++;
-	 	     }	 	
-	    }
-	   
-	 public static void CONST() {	   
-		   String tokenString = String.format("%-20s", tokens.get(i));
-		   if (tokens.get(i).t.equals(Type.CONST)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		   else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: CONST expected");
-				i++;
-		     }	
-		   
-	   }
-	   
-	public static void EQL() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-		   if (tokens.get(i).t.equals(Type.EQL)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		  else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: EQL expected");
-				i++;
-		     }	
-	   }
-	   
-	   
-	public static void NUMLIT() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-		   if (tokens.get(i).t.equals(Type.NUMLIT)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		  else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: NUMLIT expected");
-				i++;
-		     }	
-	     }
-	    
-	 public static void WRITE() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-		   if (tokens.get(i).t.equals(Type.WRITE)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		  else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: WRITE expected");
-				i++;
-		     }	
-	     }
-	  
-	public static void LPAREN() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-		   if (tokens.get(i).t.equals(Type.LPAREN)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		  else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: LPAREN expected");
-				i++;
-		     }	
-	     }
-	   
-	 public static void SINGQUO() {
-		   String tokenString = String.format("%-20s", tokens.get(i));
-		   if (tokens.get(i).t.equals(Type.SINQUO)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		   else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: SINQUO expected");
-				i++;
-		    } 
-	     }
-	   
-	public static void RPAREN() {
-		  String tokenString = String.format("%-20s", tokens.get(i));
-		  if (tokens.get(i).t.equals(Type.RPAREN)) {
-			  	System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		   else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: RPAREN expected");
-				i++;
-		    } 
-	   }
-	    
-	 public static void READ() {
-		  String tokenString = String.format("%-20s", tokens.get(i));
-		  if (tokens.get(i).t.equals(Type.READ)) {
-			   System.out.println("Accepted Token: " +tokenString+"     Current Lexeme:   "+tokens.get(i).getLexeme());
-		    	i++;
-		    }
-		   else {
-		    	System.out.println("Incorrect Token: " +tokenString+"   Token: READ expected");
-				i++;
-		    } 
-	  }
+	    }	   	
 	    
 	 public static void main(String[] args) throws FileNotFoundException {
 	       
@@ -888,4 +527,4 @@ public class SyntaxAnalyzer {
 	        PROGRAM(tokens.get(i));	//begin syntax analysis
 	        
 	          }
-}
+	}
